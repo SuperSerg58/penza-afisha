@@ -10,3 +10,39 @@ def get_html(url):
         return r.text
     else:
         print(r.status_code)
+
+
+def get_events_info(html):
+    soup = BeautifulSoup(html, 'lxml')
+    title = soup.find('div', class_='lc_fulf').find('div', class_='header_row').text
+    divs = soup.find('div', class_='lc_fulf').find('div', class_='text_col1').find_all('td')
+
+    try:
+        info = divs[1].text.split()[:-5]
+        info = ' '.join(info)
+    except:
+        info = 'No information'
+
+    try:
+        description = divs[14].text
+    except:
+        description = 'No information'
+
+    data = {
+        'Название': title,
+        'Информация': info,
+        'Описание': description
+    }
+
+    return data
+
+
+def main():
+    url = 'http://penza-afisha.ru/action.php?id=77824'
+    html = get_html(url)
+    data = get_events_info(html)
+    print(data)
+
+
+if __name__ == '__main__':
+    main()

@@ -4,14 +4,15 @@ from datetime import datetime
 
 
 def today_url():
+    """today_url -> string"""
     url = 'http://penza-afisha.ru/index.php?date='
     today = datetime.now()
-    return url+today.strftime("%Y%m%d")
+    return url + today.strftime("%Y%m%d")
 
 
 def get_html(url):
     """
-    получаем HTML главной страницы сайта
+    получаем HTML страницы сайта
     """
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36'}
@@ -23,6 +24,7 @@ def get_html(url):
 
 
 def get_films_url(html):
+
     soup = BeautifulSoup(html, 'lxml')
     divs = soup.find('div', class_="col2").find_all('div')
     films_urls = []
@@ -43,7 +45,7 @@ def get_films_url(html):
             return 'NO DATA'
 
 
-def get_other_events(html):
+def get_other_events_url(html):
     soup = BeautifulSoup(html, 'lxml')
     divs = soup.find('div', class_="col2").find_all('div', class_="text_col1")[2]
     events = []
@@ -64,18 +66,90 @@ def get_other_events(html):
             return 'NO DATA'
 
 
-def event_info(url):
-    pass
+def film_season_data(html):
+    soup = BeautifulSoup(html, 'lxml')
+    trs = soup.find_all('tr')
+    seasons = []
+    i = 6
+    for td in trs:
+        try:
+            season = trs[i].text.strip().replace('\n', ' ')
+            if 'руб' not in season:
+                break
+            # print(season)
+            seasons.append(season)
+            i += 2
+        except:
+            break
+
+    return seasons
+
+
+def get_film_info(html, url):
+    seasons_html = get_html(url)
+    soup = BeautifulSoup(html, 'lxml')
+    title = soup.find('div', class_='lc_fulf').find('div', class_='header_row').text
+    table = soup.find('div', class_='lc_fulf').find('div', class_='text_col1')
+    trs = table.find_all('td')
+    production = trs[3].text
+    creation_year = trs[5].text.strip()
+    genre = trs[9].text.strip()
+    role = trs[13].text.strip()
+    description = trs[19].text.strip()
+
+    data = {
+        'Название': title,
+        'Производство': production,
+        'Год создания': creation_year,
+        'Жанр': genre,
+        'В ролях': role,
+        'Описание': description,
+        'Расписание': film_season_data(seasons_html)
+    }
+
+    return data
+
+
+def get_events_info(html):
+    soup = BeautifulSoup(html, 'lxml')
+    title = soup.find('div', class_='lc_fulf').find('div', class_='header_row').text
+    divs = soup.find('div', class_='lc_fulf').find('div', class_='text_col1').find_all('td')
+
+    try:
+        info = divs[1].text.split()[:-5]
+        info = ' '.join(info)
+    except:
+        info = 'No information'
+
+    try:
+        description = divs[14].text
+    except:
+        description = 'No information'
+
+    data = {
+        'Название': title,
+        'Информация': info,
+        'Описание': description
+    }
+
+    return data
 
 
 def main():
     html = get_html(today_url())
-    urls = get_films_url(html) + get_other_events(html)
-    number = 1
-    for i in urls:
-        print(number, i)
-        number+=1
+    urls = get_films_url(html) + get_other_events_url(html)
+    for url in urls:
+        if 'films' in url:
+            film_html = get_html(url)
+            seasons_url = url.replace('films', 'seans').replace('?f', '?film')
+            # 'http://penza-afisha.ru/seans.php?film=3722'
+            film_data = get_film_info(film_html, seasons_url)
+            print(film_data)
+        else:
+            event_html = get_html(url)
+            event_data = get_events_info(event_html)
+            print(event_data)
 
 
 if __name__ == '__main__':
-    main()
+    print(main())

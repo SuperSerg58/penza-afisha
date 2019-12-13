@@ -22,12 +22,24 @@ def get_event_info(html):
     genre = trs[9].text.strip()
     role = trs[13].text.strip()
     description = trs[19].text.strip()
-    print(description)
+
+
+    data = {
+        'Название': title,
+        'Производство': production,
+        'Год создания': creation_year,
+        'Жанр': genre,
+        'В ролях': role,
+        'Описание': description,
+    }
+
+    return data
 
 
 def main():
     url = 'http://penza-afisha.ru/films.php?f=3744'
-    get_event_info(get_html(url))
+    data = get_event_info(get_html(url))
+    print(data)
 
 
 if __name__ == '__main__':

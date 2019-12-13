@@ -14,16 +14,34 @@ def get_html(url):
 
 def get_seans_data(html):
     soup = BeautifulSoup(html, 'lxml')
-    div = soup.find('div', id='screen').text.split()
-    print(div)
-    for item in div:
-        print(item)
+    trs = soup.find_all('tr')
+    seasons = []
+    i = 6
+    for td in trs:
+        try:
+            season = trs[i].text.strip().replace('\n', ' ')
+            if 'руб' not in season:
+                break
+            # print(season)
+            seasons.append(season)
+            i += 2
+        except:
+            break
+
+
+
+    return seasons
 
 
 def main():
-    url = 'http://penza-afisha.ru/seans.php?film=3744'
+    url = 'http://penza-afisha.ru/seans.php?film=3742'
     html = get_html(url)
-    get_seans_data(html)
+
+    dict_data = {
+        'Расписание': get_seans_data(html)
+    }
+
+    print(dict_data)
 
 
 if __name__ == '__main__':
